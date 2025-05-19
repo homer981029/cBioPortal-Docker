@@ -9,15 +9,15 @@ var { TypedCssModulesPlugin } = require('typed-css-modules-webpack-plugin');
 var commit = '"unknown"';
 var version = '"unknown"';
 // Don't show COMMIT/VERSION on Heroku (crashes, because no git dir)
-if (process.env.PATH.indexOf('heroku') === -1) {
+//if (process.env.PATH.indexOf('heroku') === -1) {
     // show full git version
-    var { GitRevisionPlugin } = require('git-revision-webpack-plugin');
-    var gitRevisionPlugin = new GitRevisionPlugin({
-        versionCommand: 'describe --always --tags --dirty',
-    });
-    commit = JSON.stringify(gitRevisionPlugin.commithash());
-    version = JSON.stringify(gitRevisionPlugin.version());
-}
+//    var { GitRevisionPlugin } = require('git-revision-webpack-plugin');
+ //   var gitRevisionPlugin = new GitRevisionPlugin({
+ //       versionCommand: 'describe --always --tags --dirty',
+  //  });
+  //  commit = JSON.stringify(gitRevisionPlugin.commithash());
+   // version = JSON.stringify(gitRevisionPlugin.version());
+//}
 
 function cleanAndValidateUrl(url) {
     if (typeof url === 'string') {
@@ -141,21 +141,33 @@ var config = {
     },
 
     plugins: [
+ //       new webpack.DefinePlugin({
+ //           VERSION: version,
+ //           COMMIT: commit,
+ //           IS_DEV_MODE: isDev,
+ //           ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
+ //               ? JSON.stringify(
+ //                     cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+ //                 )
+ //               : '"replace_me_env_cbioportal_url"',
+ //           ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
+ //               ? JSON.stringify(
+ //                     cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
+ //                 )
+ //               : '"replace_me_env_genome_nexus_url"',
+ //       }),
         new webpack.DefinePlugin({
-            VERSION: version,
-            COMMIT: commit,
+            VERSION: JSON.stringify("dev"),
+            COMMIT: JSON.stringify("local"),
             IS_DEV_MODE: isDev,
             ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
-                ? JSON.stringify(
-                      cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
-                  )
-                : '"replace_me_env_cbioportal_url"',
+            ? JSON.stringify(cleanAndValidateUrl(process.env.CBIOPORTAL_URL))
+            : '"http://localhost:8080"',  // 預設值
             ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
-                ? JSON.stringify(
-                      cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
-                  )
-                : '"replace_me_env_genome_nexus_url"',
+            ? JSON.stringify(cleanAndValidateUrl(process.env.GENOME_NEXUS_URL))
+            : '"http://localhost:8888"',  // 預設值
         }),
+
         new HtmlWebpackPlugin({ cache: false, template: 'my-index.ejs' }),
         new ProgressBarPlugin(),
         new webpack.DllReferencePlugin({

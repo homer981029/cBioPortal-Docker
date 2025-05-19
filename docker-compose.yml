@@ -26,9 +26,7 @@ services:
       - mysql
     volumes:
       - ./backend:/cbioportal/backend
-      - ./frontend:/cbioportal/frontend
       - ./backend/cbioportal/config/application.properties:/cbioportal/backend/cbioportal/src/main/resources/application.properties
-
     ports:
       - "8080:8080"
     stdin_open: true
@@ -38,6 +36,22 @@ services:
       SPRING_DATASOURCE_USERNAME: cbio
       SPRING_DATASOURCE_PASSWORD: P@ssword1
       PORTAL_AUTHENTICATE: false 
+
+  cbioportal-frontend:
+    build: .
+    container_name: cbioportal-frontend
+    working_dir: /cbioportal/frontend
+    command: bash -c "yarn install --frozen-lockfile && yarn run buildDLL:dev && yarn run buildModules && yarn run start"
+    volumes:
+      - ./frontend:/cbioportal/frontend
+    ports:
+      - "3000:3000"
+    environment:
+      CBIOPORTAL_URL: http://localhost:8080
+      GENOME_NEXUS_URL: http://localhost:8888
+      BRANCH_ENV: master
+      HOST: 0.0.0.0
+      PORT: 3000
 
 volumes:
   mysql_data:
