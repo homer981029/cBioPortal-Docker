@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: cbio-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: cbioportal
+      MYSQL_USER: cbio
+      MYSQL_PASSWORD: P@ssword1
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./seed-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cbioportal:
+    build: .
+    container_name: cbioportal-dev
+    depends_on:
+      - mysql
+    volumes:
+      - ./backend:/cbioportal/backend
+      - ./frontend:/cbioportal/frontend
+      - ./backend/cbioportal/config/application.properties:/cbioportal/backend/cbioportal/src/main/resources/application.properties
+
+    ports:
+      - "8080:8080"
+    stdin_open: true
+    tty: true
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/cbioportal?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: cbio
+      SPRING_DATASOURCE_PASSWORD: P@ssword1
+      PORTAL_AUTHENTICATE: false 
+
+volumes:
+  mysql_data:
+
