@@ -41,7 +41,7 @@ services:
     build: .
     container_name: cbioportal-frontend
     working_dir: /cbioportal/frontend
-    command: bash -c "yarn install --frozen-lockfile && yarn run buildDLL:dev && yarn run buildModules && yarn run start"
+    command: bash -c "yarn install --frozen-lockfile && yarn run buildDLL:dev && yarn run buildModules"
     volumes:
       - ./frontend:/cbioportal/frontend
     ports:

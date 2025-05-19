@@ -18,9 +18,13 @@ cd backend/cbioportal/
 java -jar target/cbioportal-exec.jar --authenticate=false
 
 #編譯
-mvn clean install -DskipTests
+# mvn clean install -DskipTests
 
 #前端 切資料夾
+
+docker exec -it cbioportal-frontend bash
+
+#切資料夾
 cd frontend
 
 #安裝依賴
