@@ -38,13 +38,13 @@ yarn run watch
 
 
 #編譯jar
-# mvn clean install -DskipTests
+mvn clean install -DskipTests
 
 
 ------//////////////////////////////////////////////
 [#/backend/cbioportal/src/main/java/org/cbioportal/legacy/web/config -M]
-add file:
 
+add file:
 CLASS NAME:WebConfig.java
 
 package org.cbioportal.legacy.web.config;
@@ -135,7 +135,9 @@ session.service.url=https://cbioportal-session-service.herokuapp.com/session_ser
 [#frontend/my-index.ejs -M]
 
 add:
-<script src="<%= htmlWebpackPlugin.files.js[0] %>"></script>
+<% for (let script of htmlWebpackPlugin.files.js) { %>
+  <script src="<%= script %>"></script>
+<% } %>
 
 ------//////////////////////////////////////////////
 [#frontend/webpack.config.js -M]
