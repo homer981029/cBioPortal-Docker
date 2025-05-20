@@ -39,7 +39,7 @@ services:
       SPRING_DATASOURCE_USERNAME: cbio
       SPRING_DATASOURCE_PASSWORD: P@ssword1
       PORTAL_AUTHENTICATE: false
-      JAVA_OPTS: -Dauthenticate=noauthsessionservice
+      JAVA_OPTS: -Dauthenticate=noauthsessionservice -Dremote.session.service.enabled=false
     networks:
       - cbio-net
 
