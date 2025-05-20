@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   mysql:
     image: mysql:5.7
@@ -18,6 +19,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - cbio-net
 
   cbioportal:
     build: .
@@ -35,25 +38,35 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/cbioportal?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: cbio
       SPRING_DATASOURCE_PASSWORD: P@ssword1
-      PORTAL_AUTHENTICATE: false 
+      PORTAL_AUTHENTICATE: false
+      JAVA_OPTS: -Dauthenticate=noauthsessionservice
+    networks:
+      - cbio-net
+
 
   cbioportal-frontend:
     build: .
     container_name: cbioportal-frontend
     working_dir: /cbioportal/frontend
     command: bash -c "yarn install --frozen-lockfile && yarn run buildDLL:dev && yarn run buildModules && tail -f /dev/null"
-
     volumes:
       - ./frontend:/cbioportal/frontend
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"  # 支援自訂 PORT，預設為 3000
     environment:
-      CBIOPORTAL_URL: http://localhost:8080
+      CBIOPORTAL_URL: http://cbioportal-dev:8080
       GENOME_NEXUS_URL: http://localhost:8888
       BRANCH_ENV: master
       HOST: 0.0.0.0
-      PORT: 3000
+      PUBLIC_HOST: ${PUBLIC_HOST:-localhost}  # 支援自訂 PUBLIC_HOST
+      PORT: ${PORT:-3000}
+    networks:
+      - cbio-net
+
 
 volumes:
   mysql_data:
 
+networks:
+  cbio-net:
+    driver: bridge

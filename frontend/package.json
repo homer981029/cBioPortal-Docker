@@ -17,7 +17,7 @@
     "startSSL": "lerna run watchSSL --parallel",
     "mergeTests": "./scripts/api-test_env.sh && node api-e2e/merge-tests.js",
     "apitests": "cd ./api-e2e && npx tsc && yarn run mergeTests && node ./run.js",
-    "watch": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --compress",
+    "watch": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --compress --host 0.0.0.0",
     "watchSSL": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development NODE_OPTIONS=--max-old-space-size=4096 webpack-dev-server --compress --https",
     "clean": "rimraf dist tsDist common-dist",
     "updatePackageVersion": "./scripts/update_package_version.sh",

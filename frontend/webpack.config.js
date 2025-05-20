@@ -10,13 +10,13 @@ var commit = '"unknown"';
 var version = '"unknown"';
 // Don't show COMMIT/VERSION on Heroku (crashes, because no git dir)
 //if (process.env.PATH.indexOf('heroku') === -1) {
-    // show full git version
+// show full git version
 //    var { GitRevisionPlugin } = require('git-revision-webpack-plugin');
- //   var gitRevisionPlugin = new GitRevisionPlugin({
- //       versionCommand: 'describe --always --tags --dirty',
-  //  });
-  //  commit = JSON.stringify(gitRevisionPlugin.commithash());
-   // version = JSON.stringify(gitRevisionPlugin.version());
+//   var gitRevisionPlugin = new GitRevisionPlugin({
+//       versionCommand: 'describe --always --tags --dirty',
+//  });
+//  commit = JSON.stringify(gitRevisionPlugin.commithash());
+// version = JSON.stringify(gitRevisionPlugin.version());
 //}
 
 function cleanAndValidateUrl(url) {
@@ -48,7 +48,9 @@ const isTest = NODE_ENV === 'test';
 console.log('NODE_ENV', NODE_ENV);
 
 // devServer config
-const devHost = process.env.HOST || 'localhost';
+// const devHost = process.env.HOST || 'localhost';
+const devHost = process.env.PUBLIC_HOST || 'localhost'; // 給瀏覽器看的
+const listenHost = process.env.HOST || '0.0.0.0'; // 給 webpack-dev-server 用
 const devPort = process.env.PORT || 3000;
 
 const root = resolve(__dirname);
@@ -141,31 +143,35 @@ var config = {
     },
 
     plugins: [
- //       new webpack.DefinePlugin({
- //           VERSION: version,
- //           COMMIT: commit,
- //           IS_DEV_MODE: isDev,
- //           ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
- //               ? JSON.stringify(
- //                     cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
- //                 )
- //               : '"replace_me_env_cbioportal_url"',
- //           ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
- //               ? JSON.stringify(
- //                     cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
- //                 )
- //               : '"replace_me_env_genome_nexus_url"',
- //       }),
+        //       new webpack.DefinePlugin({
+        //           VERSION: version,
+        //           COMMIT: commit,
+        //           IS_DEV_MODE: isDev,
+        //           ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
+        //               ? JSON.stringify(
+        //                     cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+        //                 )
+        //               : '"replace_me_env_cbioportal_url"',
+        //           ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
+        //               ? JSON.stringify(
+        //                     cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
+        //                 )
+        //               : '"replace_me_env_genome_nexus_url"',
+        //       }),
         new webpack.DefinePlugin({
-            VERSION: JSON.stringify("dev"),
-            COMMIT: JSON.stringify("local"),
+            VERSION: JSON.stringify('dev'),
+            COMMIT: JSON.stringify('local'),
             IS_DEV_MODE: isDev,
             ENV_CBIOPORTAL_URL: process.env.CBIOPORTAL_URL
-            ? JSON.stringify(cleanAndValidateUrl(process.env.CBIOPORTAL_URL))
-            : '"http://localhost:8080"',  // 預設值
+                ? JSON.stringify(
+                      cleanAndValidateUrl(process.env.CBIOPORTAL_URL)
+                  )
+                : '"http://localhost:8080"', // 預設值
             ENV_GENOME_NEXUS_URL: process.env.GENOME_NEXUS_URL
-            ? JSON.stringify(cleanAndValidateUrl(process.env.GENOME_NEXUS_URL))
-            : '"http://localhost:8888"',  // 預設值
+                ? JSON.stringify(
+                      cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)
+                  )
+                : '"http://localhost:8888"', // 預設值
         }),
 
         new HtmlWebpackPlugin({ cache: false, template: 'my-index.ejs' }),
@@ -391,22 +397,20 @@ var config = {
         },
         hot: true,
         historyApiFallback: true,
-        // TODO removed in favor of https://webpack.js.org/configuration/other-options/#infrastructurelogging
-        // noInfo: false,
-        // quiet: false,
-        // lazy: false,
         client: {
             overlay: {
                 errors: true,
                 warnings: false,
             },
+            webSocketURL: `ws://${devHost}:${devPort}/ws`, // ✅ 正確替代用法
         },
         https: false,
-        host: 'localhost',
+        host: listenHost, // '0.0.0.0'
+        port: devPort,
         headers: { 'Access-Control-Allow-Origin': '*' },
         allowedHosts: 'all',
         devMiddleware: {
-            publicPath: '/',
+            publicPath: `//${devHost}:${devPort}/`, // ✅ 給 HTML 用的正確輸出位址
             stats: 'errors-only',
         },
     },
@@ -520,7 +524,8 @@ if (isDev || isTest) {
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
-    config.output.publicPath = `//localhost:${devPort}/`;
+
+    config.output.publicPath = `//${devHost}:${devPort}/`;
 } else {
     config.output.publicPath = '/';
 
