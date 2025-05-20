@@ -28,10 +28,6 @@ docker exec -it cbioportal-frontend bash
 cd frontend
 
 #安裝依賴
-yarn install --frozen-lockfile
-
-yarn run buildDLL:dev
-yarn run buildModules
 yarn run start
 
 
