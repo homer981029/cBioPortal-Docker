@@ -54,22 +54,22 @@ public class PublicVirtualStudiesController {
       responseCode = "200",
       description = "OK",
       content = @Content(schema = @Schema(implementation = VirtualStudy.class)))
-  // public ResponseEntity<List<VirtualStudy>> getPublicVirtualStudies() {
-  //   List<VirtualStudy> virtualStudies =
-  //       sessionServiceRequestHandler.getVirtualStudiesAccessibleToUser(ALL_USERS);
-  //   return new ResponseEntity<>(virtualStudies, HttpStatus.OK);
-  // }
+  public ResponseEntity<List<VirtualStudy>> getPublicVirtualStudies() {
+    List<VirtualStudy> virtualStudies =
+        sessionServiceRequestHandler.getVirtualStudiesAccessibleToUser(ALL_USERS);
+    return new ResponseEntity<>(virtualStudies, HttpStatus.OK);
+  }
 
-public ResponseEntity<List<VirtualStudy>> getPublicVirtualStudies() {
-    try {
-        List<VirtualStudy> virtualStudies =
-            sessionServiceRequestHandler.getVirtualStudiesAccessibleToUser(ALL_USERS);
-        return new ResponseEntity<>(virtualStudies, HttpStatus.OK);
-    } catch (Exception e) {
-        // 改為回傳空陣列以避免前端 HTTP 500
-        return new ResponseEntity<>(List.of(), HttpStatus.OK);
-    }
-}
+// public ResponseEntity<List<VirtualStudy>> getPublicVirtualStudies() {
+//     try {
+//         List<VirtualStudy> virtualStudies =
+//             sessionServiceRequestHandler.getVirtualStudiesAccessibleToUser(ALL_USERS);
+//         return new ResponseEntity<>(virtualStudies, HttpStatus.OK);
+//     } catch (Exception e) {
+//         // 改為回傳空陣列以避免前端 HTTP 500
+//         return new ResponseEntity<>(List.of(), HttpStatus.OK);
+//     }
+// }
 
   @PostMapping("/{id}")
   @ApiResponse(

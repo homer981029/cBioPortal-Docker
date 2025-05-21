@@ -47,3 +47,5 @@ else
     echo -e "${RED}or export BRANCH_ENV=rc${NC}"
     exit 1
 fi
+export CBIOPORTAL_URL=${CBIOPORTAL_URL:-http://localhost:8080}
+export GENOME_NEXUS_URL=${GENOME_NEXUS_URL:-https://www.genomenexus.org}

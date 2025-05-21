@@ -50,17 +50,16 @@ services:
     working_dir: /cbioportal/frontend
     command: bash -c "yarn install --frozen-lockfile && yarn run buildDLL:dev && yarn run buildModules && tail -f /dev/null"
     volumes:
-      - .:/cbioportal  # ✅ 只保留這個
+      - ./frontend:/cbioportal/frontend
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT:-3000}:3000"  # 支援自訂 PORT，預設為 3000
     environment:
-      CBIOPORTAL_URL: ${CBIOPORTAL_URL}
-      GENOME_NEXUS_URL: ${GENOME_NEXUS_URL}
+      CBIOPORTAL_URL: http://cbioportal-dev:8080
+      GENOME_NEXUS_URL: http://localhost:8888
       BRANCH_ENV: master
       HOST: 0.0.0.0
-      PUBLIC_HOST: ${PUBLIC_HOST:-localhost}
+      PUBLIC_HOST: ${PUBLIC_HOST:-localhost}  # 支援自訂 PUBLIC_HOST
       PORT: ${PORT:-3000}
-      GIT_DISCOVERY_ACROSS_FILESYSTEM: "1"
     networks:
       - cbio-net
 

@@ -13,7 +13,7 @@
     "prettierFixCurrentChanges"
   ],
   "scripts": {
-    "start": "lerna run watch --parallel",
+    "start": "lerna run watch --parallel ",
     "startSSL": "lerna run watchSSL --parallel",
     "mergeTests": "./scripts/api-test_env.sh && node api-e2e/merge-tests.js",
     "apitests": "cd ./api-e2e && npx tsc && yarn run mergeTests && node ./run.js",

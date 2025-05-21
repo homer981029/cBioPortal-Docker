@@ -32,7 +32,10 @@ docker exec -it cbioportal-frontend bash
 #切資料夾
 cd frontend
 
-#啟動前端
+#編譯dll動態庫
+/root/.nvm/versions/node/v15.2.1/bin/node ./node_modules/webpack/bin/webpack.js --config vendor-bundles.webpack.config.js
+
+#啟動專案
 yarn run watch
 
 
@@ -42,7 +45,7 @@ mvn clean install -DskipTests
 
 
 ------//////////////////////////////////////////////
-[#/backend/cbioportal/src/main/java/org/cbioportal/legacy/web/config -M]
+[#/backend/cbioportal/src/main/java/org/cbioportal/legacy/web/config -M]-DELETE
 
 add file:
 CLASS NAME:WebConfig.java
@@ -72,7 +75,7 @@ public class WebConfig {
 }
 
 ------//////////////////////////////////////////////
-[#cbioportal/src/main/java/org/cbioportal/legacy/web/PublicVirtualStudiesController.java -M]
+[#cbioportal/src/main/java/org/cbioportal/legacy/web/PublicVirtualStudiesController.java -M] -DELETE
 
 add:
 public ResponseEntity<List<VirtualStudy>> getPublicVirtualStudies() {
@@ -257,10 +260,295 @@ remove:
         },
     },
 
+------//////////////////////////////////////////////
+[#package.json -M]
+
+add:
+scripts:{
+    ...
+    "watch": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --compress --host 0.0.0.0",
+    ...
+}
+remove:
+scripts:{
+    ...
+    "watch": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --compress",
+    ...
+}
+
+------//////////////////////////////////////////////
+[#frontend/scripts/env_vars.sh -M]
+
+add:
+export CBIOPORTAL_URL=${CBIOPORTAL_URL:-http://localhost:8080}
+export GENOME_NEXUS_URL=${GENOME_NEXUS_URL:-https://www.genomenexus.org}
 
 
+------//////////////////////////////////////////////
+[#/frontend/packages/cbioportal-frontend-commons/src/lib/TextTruncationUtils.ts -M]
 
+add:
+import _ from 'lodash';
 
+const canvas = document.createElement('canvas');
+const context = canvas.getContext('2d')!;
+
+function setFont(fontFamily: string, fontSize: string) {
+    context.font = `${fontSize} ${fontFamily}`;
+}
+
+export function getTextWidth(text: string, fontFamily: string, fontSize: string) {
+    setFont(fontFamily, fontSize);
+    return context.measureText(text).width;
+}
+
+export function getTextHeight(text: string, fontFamily: string, fontSize: string) {
+    // Canvas 不提供精確高度，我們保守估計為 1.2 倍 fontSize（單行）
+    return parseFloat(fontSize) * 1.2;
+}
+
+export function getTextDiagonal(textHeight: number, textWidth: number) {
+    return Math.sqrt(Math.pow(textWidth, 2) + Math.pow(textHeight, 2));
+}
+
+function splitTextByWidth(
+    text: string,
+    maxWidth: number,
+    fontFamily: string,
+    fontSize: string
+) {
+    const ret: string[] = [];
+    let index = 0;
+    let chunk = '';
+    while (index < text.length) {
+        chunk += text[index];
+        if (getTextWidth(chunk, fontFamily, fontSize) >= maxWidth) {
+            ret.push(chunk);
+            chunk = '';
+        }
+        index += 1;
+    }
+    if (chunk.length) {
+        ret.push(chunk);
+    }
+    return ret;
+}
+
+export function wrapText(
+    text: string,
+    maxWidth: number,
+    fontFamily: string,
+    fontSize: string
+): string[] {
+    if (getTextWidth(text, fontFamily, fontSize) <= maxWidth) {
+        return [text];
+    } else {
+        let words = text.split(/\s+/g);
+        words = _.flatten(
+            words.map(word =>
+                splitTextByWidth(word, maxWidth, fontFamily, fontSize)
+            )
+        );
+        let currentLine = '';
+        const ret: string[] = [];
+        for (const word of words) {
+            if (getTextWidth(word, fontFamily, fontSize) >= maxWidth) {
+                if (currentLine.length) {
+                    ret.push(currentLine);
+                }
+                ret.push(word);
+                currentLine = '';
+            } else if (
+                getTextWidth(
+                    (currentLine.length ? currentLine + ' ' : currentLine) +
+                        word,
+                    fontFamily,
+                    fontSize
+                ) >= maxWidth
+            ) {
+                if (currentLine.length) {
+                    ret.push(currentLine);
+                }
+                currentLine = word;
+            } else {
+                currentLine += (currentLine.length ? ' ' : '') + word;
+            }
+        }
+        if (currentLine.length) {
+            ret.push(currentLine);
+        }
+        return ret;
+    }
+}
+
+export function truncateWithEllipsis(
+    text: string,
+    maxWidth: number,
+    fontFamily: string,
+    fontSize: string
+): string {
+    const wrapped = splitTextByWidth(text, maxWidth, fontFamily, fontSize);
+    if (wrapped.length > 1) {
+        return wrapped[0] + '...';
+    } else {
+        return wrapped[0];
+    }
+}
+
+export function truncateWithEllipsisReport(
+    text: string,
+    maxWidth: number,
+    fontFamily: string,
+    fontSize: string
+) {
+    const wrapped = splitTextByWidth(text, maxWidth, fontFamily, fontSize);
+    let isTruncated = false;
+    if (wrapped.length > 1) {
+        text = wrapped[0] + '...';
+        isTruncated = true;
+    } else {
+        text = wrapped[0];
+    }
+    return {
+        text,
+        isTruncated,
+    };
+}
+remove:
+import measureText from 'measure-text';
+import _ from 'lodash';
+
+export function getTextDiagonal(textHeight: number, textWidth: number) {
+    return Math.sqrt(Math.pow(textWidth, 2) + Math.pow(textHeight, 2));
+}
+
+export function getTextHeight(
+    text: string,
+    fontFamily: string,
+    fontSize: string
+) {
+    return measureText({ text, fontFamily, fontSize, lineHeight: 1 }).height
+        .value;
+}
+
+export function getTextWidth(
+    text: string,
+    fontFamily: string,
+    fontSize: string
+) {
+    return measureText({ text, fontFamily, fontSize, lineHeight: 1 }).width
+        .value;
+}
+
+function splitTextByWidth(
+    text: string,
+    maxWidth: number,
+    fontFamily: string,
+    fontSize: string
+) {
+    const ret: string[] = [];
+    let index = 0;
+    let chunk = '';
+    while (index < text.length) {
+        chunk += text[index];
+        if (getTextWidth(chunk, fontFamily, fontSize) >= maxWidth) {
+            ret.push(chunk);
+            chunk = '';
+        }
+        index += 1;
+    }
+    if (chunk.length) {
+        ret.push(chunk);
+    }
+    return ret;
+}
+
+export function wrapText(
+    text: string,
+    maxWidth: number,
+    fontFamily: string,
+    fontSize: string
+): string[] {
+    if (getTextWidth(text, fontFamily, fontSize) <= maxWidth) {
+        return [text];
+    } else {
+        // label too big, need to wrap to fit
+        let words = text.split(/\s+/g); // first split words, for nicer breaks if possible
+        // next split chunks of max width
+        words = _.flatten(
+            words.map(word =>
+                splitTextByWidth(word, maxWidth, fontFamily, fontSize)
+            )
+        );
+        let currentLine = '';
+        const ret: string[] = [];
+        for (const word of words) {
+            if (getTextWidth(word, fontFamily, fontSize) >= maxWidth) {
+                if (currentLine.length) {
+                    ret.push(currentLine);
+                }
+                ret.push(word);
+                currentLine = '';
+            } else if (
+                getTextWidth(
+                    (currentLine.length ? currentLine + ' ' : currentLine) +
+                        word,
+                    fontFamily,
+                    fontSize
+                ) >= maxWidth
+            ) {
+                if (currentLine.length) {
+                    ret.push(currentLine);
+                }
+                currentLine = word;
+            } else {
+                if (currentLine.length) {
+                    currentLine += ' ';
+                }
+                currentLine += word;
+            }
+        }
+        if (currentLine.length) {
+            ret.push(currentLine);
+        }
+        return ret;
+    }
+}
+
+export function truncateWithEllipsis(
+    text: string,
+    maxWidth: number,
+    fontFamily: string,
+    fontSize: string
+): string {
+    const wrapped = splitTextByWidth(text, maxWidth, fontFamily, fontSize);
+    if (wrapped.length > 1) {
+        return wrapped[0] + '...';
+    } else {
+        return wrapped[0];
+    }
+}
+
+export function truncateWithEllipsisReport(
+    text: string,
+    maxWidth: number,
+    fontFamily: string,
+    fontSize: string
+) {
+    const wrapped = splitTextByWidth(text, maxWidth, fontFamily, fontSize);
+    let isTruncated = false;
+    if (wrapped.length > 1) {
+        text = wrapped[0] + '...';
+        isTruncated = true;
+    } else {
+        text = wrapped[0];
+        isTruncated = false;
+    }
+    return {
+        text,
+        isTruncated,
+    };
+}
 
 
 
