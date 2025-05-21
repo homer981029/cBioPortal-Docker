@@ -18,8 +18,14 @@ docker compose up -d
 #前後端
 docker exec -it cbioportal-dev bash
 
+#加git 進入環境變數
+export GIT_DIR=/cbioportal/.git
+
 #切資料夾
 cd backend/cbioportal/
+
+#編譯jar (first time)
+mvn clean install -DskipTests
 
 #啟動後端
 java -jar target/cbioportal-exec.jar --authenticate=false
@@ -40,8 +46,7 @@ yarn run watch
 
 
 
-#編譯jar
-mvn clean install -DskipTests
+
 
 
 ------//////////////////////////////////////////////

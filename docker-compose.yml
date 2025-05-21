@@ -28,10 +28,10 @@ services:
     depends_on:
       - mysql
     volumes:
-      - ./backend:/cbioportal/backend
-      - ./backend/cbioportal/config/application.properties:/cbioportal/backend/cbioportal/src/main/resources/application.properties
+      - .:/cbioportal  # ✅ 改這行，包含 .git
     ports:
       - "8080:8080"
+    working_dir: /cbioportal/backend/cbioportal
     stdin_open: true
     tty: true
     environment:
@@ -40,8 +40,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: P@ssword1
       PORTAL_AUTHENTICATE: false
       JAVA_OPTS: -Dauthenticate=noauthsessionservice -Dremote.session.service.enabled=false
+      GIT_DIR: /cbioportal/.git  # ✅ 加這行讓 Maven 插件能找到 .git
     networks:
       - cbio-net
+
 
 
   cbioportal-frontend:
